@@ -15,13 +15,13 @@ class PID(self, kp, ki, kd):
         self.reset()
 
     def reset(self):
-        self._last_time = 0;
+        self._last_time = 0
         self._last_error = Infinity
-        self._error_sum = 0;
+        self._error_sum = 0
 
-    def getCommand(e):
+    def getCommand(self, e):
         # Compute dt in seconds
-        time = calendar.timegm(time.gmtime()) # calculates elapsed seconds from 1970
+        time = getDateNow()
         dt = (time - self._last_time) / 1000
 
         de = 0
@@ -31,13 +31,17 @@ class PID(self, kp, ki, kd):
                 de = (e - self._last_error) / dt;
 
             # Integrate error
-            self._error_sum += e * dt;
+            self._error_sum += e * dt
         }
 
         # Update our trackers
-        self._last_time = time;
-        self._last_error = e;
+        self._last_time = time
+        self._last_error = e
 
         # Compute commands
         command = self._kp * e + self._ki * self._error_sum + self._kd * de
         return command
+
+# calculates elapsed seconds from 1970
+def getDateNow():
+    return calendar.timegm(time.gmtime())
