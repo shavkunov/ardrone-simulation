@@ -131,8 +131,8 @@ class Controller():
         state = self._state
 
         # Remap our target position in the world coordinates
-        gx = state.x - Math.sin(state.yaw) * distance
-        gy = state.y + Math.cos(state.yaw) * distance
+        gx = state.x - math.sin(state.yaw) * distance
+        gy = state.y + math.cos(state.yaw) * distance
 
         # Assign the new goal
         self._go({
@@ -155,7 +155,7 @@ class Controller():
     """
     def clockwise(self, angle):
         state = self._state
-        yaw = state.yaw.toDeg() + angle
+        yaw = math.degrees(state.yaw) + angle
 
         self._go({
             x: state.x,
@@ -254,7 +254,7 @@ class Controller():
 
     def _processNavdata(self, navdata):
         # EKF prediction step
-        this._ekf.predict(navdata);
+        this._ekf.predict(navdata)
 
         """
             If a tag is detected by the bottom camera, we attempt a correction step
@@ -291,8 +291,8 @@ class Controller():
         } """
 
         # Keep a local copy of the state
-        self._state = self._ekf.getState();
-        self._state.z = navdata.altd;
+        self._state = self._ekf.getState()
+        self._state.z = navdata.altd
         self._state.vx = navdata.vx / 1000 # We want m/s instead of mm/s
         self._state.vy = navdata.vy / 1000
 
@@ -300,7 +300,7 @@ class Controller():
         if x < min:
             return min
 
-        if x > max
+        if x > max:
             return
 
         return x
@@ -350,15 +350,13 @@ class Controller():
                     # self.emit('goalReached', this._state);
             else:
                 self._last_ok = getDateNow()
-        } else {
+        else:
             # If we just left the goal, we notify
-            if (self._last_ok != 0) {
+            if self._last_ok != 0:
                 # Reset last ok since we are in motion
                 self._last_ok = 0
                 self._goal.reached = False
                 # self.emit('goalLeft', this._state);
-            }
-        }
 
         # Get Raw command from PID
         ux = this._pid_x.getCommand(ex)
