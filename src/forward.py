@@ -18,13 +18,19 @@ class AutonomousFlight():
         self.status = ""
         rospy.init_node('forward', anonymous=False)
         self.rate = rospy.Rate(10) # float(1.0/3.0)
-        self.pubTakeoff = rospy.Publisher("ardrone/takeoff",Empty, queue_size=10)
-        self.pubLand = rospy.Publisher("ardrone/land",Empty, queue_size=10)
-        self.pubCommand = rospy.Publisher('cmd_vel',Twist, queue_size=10)
+        self.pubTakeoff = rospy.Publisher("ardrone/takeoff",Empty)
+        self.pubLand = rospy.Publisher("ardrone/land",Empty)
+        self.pubCommand = rospy.Publisher('cmd_vel',Twist)
         self.command = Twist()
+        self.navdata = rospy.Subscriber("ardrone/navdata", Navdata, self.NavdataCallback)
         #self.commandTimer = rospy.Timer(rospy.Duration(COMMAND_PERIOD/1000.0),self.SendCommand)
         self.state_change_time = rospy.Time.now()    
         rospy.on_shutdown(self.SendLand)
+
+    def NavdataCallback(self, navdata):
+        t = navdata.header.stamp.to_sec()
+        #print("received odometry message: time=%f battery=%f vx=%f vy=%f z=%f yaw=%f"%(t,navdata.batteryPercent,navdata.vx,navdata.vy,navdata.altd,navdata.rotZ))
+        print(navdata)
 
     def SendTakeOff(self):
         self.pubTakeoff.publish(Empty()) 
