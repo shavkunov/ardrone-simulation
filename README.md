@@ -34,16 +34,21 @@ You've installed all the packages, now it's time to make some code.
 ## Run
 Code your program. Actually, `src` directory here is code src from my package.
 Don't forget to:
+
 `chmod +x your_program.py` 
 To make it executable.
 
 After that, in you workspace:
+
 `source devel/setup.bash`
 And you are able to run:
+
 `rosrun your_package_name your_program_name`
 
 To see it all together launch Gazeebo at first:
+
 `roslaunch cvg_sim_gazebo ardrone_testworld.launch`
 In second Terminal window launch:
+
 `rosrun your_package_name your_program_name`
 For example, you can take forward.py script from [Roy](https://github.com/amroygaol/AR_Drone_Example_code)
