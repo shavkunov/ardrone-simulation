@@ -7,8 +7,8 @@ import time
     If the drone is close to goal, the parameters will reduce his speed.
 """
 Infinity = 2e9
-class PID():
-    def __init__(self, kp, ki, kd):
+class PID(kp, ki, kd):
+    def __init__(self):
         self._kp = kp
         self._ki = ki
         self._kd = kd

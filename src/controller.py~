@@ -15,7 +15,7 @@ class Controller():
     def __init__(self):
 
         #The position of a roundel tag to detect
-        self._tag = {"x": 0, "y": 0, "yaw": 0} # TODO: what?
+        self._tag = {x: 0, y: 0, yaw: 0} # TODO: what?
 
         # Configure the four PID required to control the drone
         self._pid_x   = PID(0.5, 0, 0.35)
