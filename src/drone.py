@@ -6,6 +6,8 @@ from ardrone_autonomy.msg import Navdata
 import rospy
 import time
 
+COMMAND_PERIOD = 100 #ms
+
 class Drone():
     def __init__(self, navdataListener):
         rospy.init_node('ardrone_flight', anonymous=False)
@@ -15,20 +17,19 @@ class Drone():
         self.pubCommand = rospy.Publisher('cmd_vel',Twist, queue_size=10)
         self.command = Twist()
         self.navdata = rospy.Subscriber("ardrone/navdata", Navdata, navdataListener)
-        self.state_change_time = rospy.Time.now()
+        #self.commandTimer = rospy.Timer(rospy.Duration(COMMAND_PERIOD/1000.0), self.Command)
         rospy.on_shutdown(self.land)
 
-    def navdataCallback(self, navdata):
-        time = navdata.header.stamp.to_sec()
-        # navigation data proccessing
-
     def takeOff(self):
-        time.sleep(4)
+        time.sleep(3) # time to initialize
         self.pubTakeoff.publish(Empty())
+
+        time.sleep(3) # time to execute taking off
         self.rate.sleep()
 
     def land(self):
         self.pubLand.publish(Empty())
+        self.rate.sleep()
 
     def stop(self):
         self.Command(0, 0, 0, 0, 0, 0)
@@ -53,5 +54,4 @@ class Drone():
         self.command.angular.y = angular_y
         self.command.angular.z = angular_z
         self.pubCommand.publish(self.command)
-        print("published", self.command)
         self.rate.sleep()

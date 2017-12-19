@@ -9,7 +9,7 @@ import math
 EPS_LIN      = 0.1; # We are ok with 10 cm horizontal precision
 EPS_ALT      = 0.1; # We are ok with 10 cm altitude precision
 EPS_ANG      = 0.1; # We are ok with 0.1 rad precision (5 deg)
-STABLE_DELAY = 200; # Time in ms to wait before declaring the drone on target
+STABLE_DELAY = 5; # Time in s to wait before declaring the drone on target
 
 class Controller():
     def __init__(self):
@@ -77,24 +77,21 @@ class Controller():
     def isBusy(self):
         return self._busy
 
-    def isPrevGoalReached(self):
+    def isCommandExecuting(self):
         if self._goal == None:
             return self.isBusy()
 
-        return self._goal['reached']
-
-    def isCommandExecuting(self):
-        return self.isBusy() or not self.isPrevGoalReached()
+        return not self._goal['reached']
 
     """
         Sets the goal to the current state and attempt to hover on top.
     """
     def hover(self):
         self._go({
-            "x": self._state.x,
-            "y": self._state.y,
-            "z": self._state.z,
-            "yaw": self._state.yaw
+            "x": self._state["x"],
+            "y": self._state["y"],
+            "z": self._state["z"],
+            "yaw": self._state["yaw"]
         });
 
     def land(self):
@@ -159,8 +156,8 @@ class Controller():
         self._go({
             "x": gx,
             "y": gy,
-            "z": state.z,
-            "yaw": state.yaw
+            "z": state["z"],
+            "yaw": state["yaw"]
         })
 
     """
@@ -227,7 +224,7 @@ class Controller():
     def yaw(self, yaw):
         state = self._state
         self._go({
-            "x": state['z'],
+            "x": state['x'],
             "y": state['y'],
             "z": state['z'],
             "yaw": math.radians(yaw)
@@ -262,11 +259,14 @@ class Controller():
 
         # Make sure we don't attempt to go too low
         if hasattr(goal, 'z'):
-            goal['z'] = Math.max(goal['z'], 0.5)
+            goal['z'] = math.max(goal['z'], 0.5)
 
         # Update our goal
         self._goal = goal
         self._goal['reached'] = False
+
+        #print("updated goal", self._goal)
+        #print("state", self._state)
 
         # Keep track of the callback to trigger when we reach the goal
         # this._callback = callback TODO
@@ -280,7 +280,7 @@ class Controller():
 
         # Keep a local copy of the state
         self._state = self._ekf.getState()
-        self._state['z'] = navdata.altd
+        self._state['z'] = navdata.altd / 1000 # altidude in mm, we want meters
         self._state['vx'] = navdata.vx / 1000 # We want m/s instead of mm/s
         self._state['vy'] = navdata.vy / 1000
 
@@ -294,6 +294,10 @@ class Controller():
         return x
 
     def _control(self, navdata):
+        #print("control_____")
+        #print("updated goal", self._goal)
+        #print("state", self._state)
+
         # Do not control if not enabled
         if not self._enabled:
             return
@@ -318,9 +322,12 @@ class Controller():
         # Check if we are within the target area
         if (abs(ex) < EPS_LIN) and (abs(ey) < EPS_LIN) \
             and (abs(ez) < EPS_ALT) and (abs(eyaw) < EPS_ANG):
+            #print("within targer area")
             # Have we been here before ?
             if not self._goal['reached'] and self._last_ok != 0:
                 # And for long enough ?
+                #print("checking for stable delay")
+                #print("stable diff", getDateNow() - self._last_ok)
                 if (getDateNow() - self._last_ok) > STABLE_DELAY:
                     # Mark the goal has reached
                     self._goal['reached'] = True
