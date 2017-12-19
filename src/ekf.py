@@ -27,9 +27,10 @@ class EKF():
         self._last_yaw    = None
 
     def predict(data):
-        pitch = data.demo.rotation.pitch.toRad()
-        roll  = data.demo.rotation.roll.toRad()
-        yaw   = normAngle(data.demo.rotation.yaw.toRad())
+        # by definition of aircraft axes
+        roll  = data.rotX
+        pitch = data.rotY
+        yaw   = data.rotZ
         vx    = data.vx / 1000 # We want m/s instead of mm/s
         vy    = data.vy / 1000
         dt    = self._delta_t
