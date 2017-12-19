@@ -6,7 +6,6 @@ import time
     It's used to control drone's -1..1 parameters.
     If the drone is close to goal, the parameters will reduce his speed.
 """
-Infinity = 2e9
 class PID():
     def __init__(self, kp, ki, kd):
         self._kp = kp
@@ -16,7 +15,7 @@ class PID():
 
     def reset(self):
         self._last_time = 0
-        self._last_error = Infinity
+        self._last_error = float('inf')
         self._error_sum = 0
 
     def getCommand(self, e):
@@ -27,8 +26,8 @@ class PID():
         de = 0
         if self._last_time != 0:
             # Compute de (error derivation)
-            if self._last_error < Infinity:
-                de = (e - self._last_error) / dt;
+            if self._last_error < float('inf'):
+                de = float('inf') if dt == 0 else (e - self._last_error) / dt
 
             # Integrate error
             self._error_sum += e * dt

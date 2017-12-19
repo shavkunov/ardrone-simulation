@@ -273,7 +273,7 @@ class Controller():
             return min
 
         if x > max:
-            return
+            return max
 
         return x
 

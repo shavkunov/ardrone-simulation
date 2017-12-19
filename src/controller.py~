@@ -268,7 +268,7 @@ class Controller():
         self._state['vx'] = navdata.vx / 1000 # We want m/s instead of mm/s
         self._state['vy'] = navdata.vy / 1000
 
-    def within(x, min, max):
+    def within(self, x, min, max):
         if x < min:
             return min
 

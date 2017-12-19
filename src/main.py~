@@ -1,4 +1,4 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python3
 
 from controller import Controller
 import rospy
@@ -10,7 +10,7 @@ def main():
 	controller.forward(5)
 	controller.clockwise(90)
 	controller.land()
-    rospy.spin()
+	rospy.spin()
 
 if __name__ == '__main__':
 	main()
