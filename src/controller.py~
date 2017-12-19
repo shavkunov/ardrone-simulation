@@ -86,10 +86,14 @@ class Controller():
         });
 
     def land(self):
+        self._busy = True
         self._drone.land()
+        self._busy = False
 
     def takeOff(self):
+        self._busy = True
         self._drone.takeOff()
+        self._busy = False
 
     """
         Reset the kalman filter to its base state (default is x:0, y:0, yaw:0).
@@ -273,7 +277,7 @@ class Controller():
             return min
 
         if x > max:
-            return
+            return max
 
         return x
 

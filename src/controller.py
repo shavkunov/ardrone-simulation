@@ -74,6 +74,9 @@ class Controller():
         self._enabled = False
         self._drone.stop()
 
+    def isBusy(self):
+        return self._busy
+
     """
         Sets the goal to the current state and attempt to hover on top.
     """
@@ -86,10 +89,14 @@ class Controller():
         });
 
     def land(self):
+        self._busy = True
         self._drone.land()
+        self._busy = False
 
     def takeOff(self):
+        self._busy = True
         self._drone.takeOff()
+        self._busy = False
 
     """
         Reset the kalman filter to its base state (default is x:0, y:0, yaw:0).

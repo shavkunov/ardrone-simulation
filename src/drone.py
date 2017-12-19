@@ -4,6 +4,7 @@ from std_msgs.msg import Empty
 from ardrone_autonomy.msg import Navdata
 
 import rospy
+import time
 
 class Drone():
     def __init__(self, navdataListener):
@@ -22,6 +23,7 @@ class Drone():
         # navigation data proccessing
 
     def takeOff(self):
+        time.sleep(4)
         self.pubTakeoff.publish(Empty())
         self.rate.sleep()
 
@@ -51,4 +53,5 @@ class Drone():
         self.command.angular.y = angular_y
         self.command.angular.z = angular_z
         self.pubCommand.publish(self.command)
+        print("published", self.command)
         self.rate.sleep()
