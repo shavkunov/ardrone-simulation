@@ -9,9 +9,9 @@ class Drone():
     def __init__(self, navdataListener):
         rospy.init_node('ardrone_flight', anonymous=False)
         self.rate = rospy.Rate(10)
-        self.pubTakeoff = rospy.Publisher("ardrone/takeoff",Empty)
-        self.pubLand = rospy.Publisher("ardrone/land",Empty)
-        self.pubCommand = rospy.Publisher('cmd_vel',Twist)
+        self.pubTakeoff = rospy.Publisher("ardrone/takeoff",Empty, queue_size=10)
+        self.pubLand = rospy.Publisher("ardrone/land",Empty, queue_size=10)
+        self.pubCommand = rospy.Publisher('cmd_vel',Twist, queue_size=10)
         self.command = Twist()
         self.navdata = rospy.Subscriber("ardrone/navdata", Navdata, navdataListener)
         self.state_change_time = rospy.Time.now()

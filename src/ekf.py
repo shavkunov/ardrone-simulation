@@ -26,7 +26,7 @@ class EKF():
                                       [0, 0, 0.3]])
         self._last_yaw    = None
 
-    def predict(data):
+    def predict(self, data):
         # by definition of aircraft axes
         roll  = data.rotX
         pitch = data.rotY
@@ -37,15 +37,15 @@ class EKF():
 
         # We are not interested by the absolute yaw, but the yaw motion,
         # so we need at least a prior value to get started.
-        if this._last_yaw == null:
-            this._last_yaw = yaw
+        if hasattr(self, '_last_yaw'):
+            self._last_yaw = yaw
             return
 
         # Compute the odometry by integrating the motion over delta_t
-        vo = {
-            dx: vx * dt,
-            dy: vy * dt,
-            dyaw: yaw - self._last_yaw
+        o = {
+            "dx": vx * dt,
+            "dy": vy * dt,
+            "dyaw": yaw - self._last_yaw
         }
         self._last_yaw  = yaw
 

@@ -3,6 +3,8 @@ from std_msgs.msg import String
 from std_msgs.msg import Empty
 from ardrone_autonomy.msg import Navdata
 
+import rospy
+
 class Drone():
     def __init__(self, navdataListener):
         rospy.init_node('ardrone_flight', anonymous=False)

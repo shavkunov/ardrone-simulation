@@ -40,7 +40,7 @@ class Controller():
         self._callback = None
 
         # The last known state
-        self._state   = None
+        self._state   = {"x": 0, "y": 0, "yaw": 0}
 
         # The last time we have reached the goal (all control commands = 0)
         self._last_ok = 0;
@@ -79,10 +79,10 @@ class Controller():
     """
     def hover(self):
         self._go({
-            x: self._state.x,
-            y: self._state.y,
-            z: self._state.z,
-            yaw: self._state.yaw
+            "x": self._state.x,
+            "y": self._state.y,
+            "z": self._state.z,
+            "yaw": self._state.yaw
         });
 
     """
@@ -104,15 +104,15 @@ class Controller():
         state = self._state
 
         # Remap our target position in the world coordinates
-        gx = state.x + math.cos(state.yaw) * distance
-        gy = state.y + math.sin(state.yaw) * distance
+        gx = state['x'] + math.cos(state['yaw']) * distance
+        gy = state['y'] + math.sin(state['yaw']) * distance
 
         # Assign the new goal. TODO: callback?
         self._go({
-            x: gx,
-            y: gy,
-            z: state.z,
-            yaw: state.yaw
+            "x": gx,
+            "y": gy,
+            "z": state.z,
+            "yaw": state.yaw
         })
 
     """
@@ -130,15 +130,15 @@ class Controller():
         state = self._state
 
         # Remap our target position in the world coordinates
-        gx = state.x - math.sin(state.yaw) * distance
-        gy = state.y + math.cos(state.yaw) * distance
+        gx = state['x'] - math.sin(state['yaw']) * distance
+        gy = state['y'] + math.cos(state['yaw']) * distance
 
         # Assign the new goal
         self._go({
-            x: gx,
-            y: gy,
-            z: state.z,
-            yaw: state.yaw
+            "x": gx,
+            "y": gy,
+            "z": state.z,
+            "yaw": state.yaw
         })
 
     """
@@ -154,13 +154,13 @@ class Controller():
     """
     def clockwise(self, angle):
         state = self._state
-        yaw = math.degrees(state.yaw) + angle
+        yaw = math.degrees(state['yaw']) + angle
 
         self._go({
-            x: state.x,
-            y: state.y,
-            z: state.z,
-            yaw: math.radians(yaw)
+            "x": state['x'],
+            "y": state['y'],
+            "z": state['z'],
+            "yaw": math.radians(yaw)
         })
 
     """
@@ -175,10 +175,10 @@ class Controller():
     def up(self, distance):
         state = self._state
         self._go({
-            x: state.x,
-            y: state.y,
-            z: state.z + distance,
-            yaw: state.yaw
+            "x": state['x'],
+            "y": state['y'],
+            "z": state['z'] + distance,
+            "yaw": state['yaw']
         })
 
     """
@@ -193,10 +193,10 @@ class Controller():
     def altitude(self, altitude):
         state = self._state
         self._go({
-            x: state.x,
-            y: state.y,
-            z: altitude,
-            yaw: state.yaw
+            "x": state['x'],
+            "y": state['y'],
+            "z": altitude,
+            "yaw": state['yaw']
         })
 
     """
@@ -205,10 +205,10 @@ class Controller():
     def yaw(self, yaw):
         state = self._state
         self._go({
-            x: state.x,
-            y: state.y,
-            z: state.z,
-            yaw: math.radians(yaw)
+            "x": state['z'],
+            "y": state['y'],
+            "z": state['z'],
+            "yaw": math.radians(yaw)
         })
 
     """
@@ -221,29 +221,30 @@ class Controller():
     # TODO: add callback
     def go(self, goal):
         if hasattr(goal, 'yaw'):
-            goal.yaw = math.radians(goal.yaw)
+            goal['yaw'] = math.radians(goal['yaw'])
 
         return self._go(goal)
 
-    def _go(self, goal):
+    def _go(self, goal=None):
         # Since we are going to modify goal settings, we disable the controller, just in case.
         self.disable()
 
         # If no goal given, assume an empty goal
-        #goal = goal || {}
+        if goal == None:
+            goal = {}
 
         # Normalize the yaw, to make sure we don't spin 360deg for nothing
         if hasattr(goal, 'yaw'):
-            yaw = goal.yaw
-            goal.yaw = math.atan2(math.sin(yaw), math.cos(yaw))
+            yaw = goal['yaw']
+            goal['yaw'] = math.atan2(math.sin(yaw), math.cos(yaw))
 
         # Make sure we don't attempt to go too low
         if hasattr(goal, 'z'):
-            goal.z = Math.max(goal.z, 0.5)
+            goal.['z'] = Math.max(goal['z'], 0.5)
 
         # Update our goal
         self._goal = goal
-        self._goal.reached = False
+        self._goal['reached'] = False
 
         # Keep track of the callback to trigger when we reach the goal
         # this._callback = callback TODO
@@ -257,9 +258,10 @@ class Controller():
 
         # Keep a local copy of the state
         self._state = self._ekf.getState()
-        self._state.z = navdata.altd
-        self._state.vx = navdata.vx / 1000 # We want m/s instead of mm/s
-        self._state.vy = navdata.vy / 1000
+        self._state['z'] = navdata['altd']
+        self._state['vx'] = navdata['vx'] / 1000 # We want m/s instead of mm/s
+        self._state['vy'] = navdata['vy'] / 1000
+        print(self._state)
 
     def within(x, min, max):
         if x < min:
@@ -280,27 +282,28 @@ class Controller():
             return
 
         # Compute error between current state and goal
-        ex   = self._goal.x - self._state.x if (self._goal.x != None) else 0
-        ey   = self._goal.y - self._state.y if (self._goal.y != None) else 0
-        ez   = self._goal.z - self._state.z if (self._goal.z != None) else 0
-        eyaw = self._goal.yaw - self._state.yaw if (self._goal.yaw != None) else 0
+        hasattr(goal, 'z')
+        ex   = self._goal['x'] - self._state['x'] if ('x' in self._goal) else 0
+        ey   = self._goal['y'] - self._state['y'] if ('y' in self._goal) else 0
+        ez   = self._goal['z'] - self._state['z'] if ('z' in self._goal) else 0
+        eyaw = self._goal['yaw'] - self._state['yaw'] if ('yaw' in self._goal) else 0
 
         # Normalize eyaw within [-180, 180]
-        while eyaw < -Math.PI:
-            eyaw += (2 * Math.PI)
+        while eyaw < -math.pi:
+            eyaw += (2 * math.pi)
 
-        while eyaw >  Math.PI:
-            eyaw -= (2 * Math.PI)
+        while eyaw >  math.PI:
+            eyaw -= (2 * math.pi)
 
         # Check if we are within the target area
-        if (math.abs(ex) < EPS_LIN) and (Math.abs(ey) < EPS_LIN) \
-            and (Math.abs(ez) < EPS_ALT) and (Math.abs(eyaw) < EPS_ANG):
+        if (abs(ex) < EPS_LIN) and (abs(ey) < EPS_LIN) \
+            and (abs(ez) < EPS_ALT) and (abs(eyaw) < EPS_ANG):
             # Have we been here before ?
-            if not self._goal.reached and self._last_ok != 0:
+            if not self._goal['reached'] and self._last_ok != 0:
                 # And for long enough ?
                 if (getDateNow() - self._last_ok) > STABLE_DELAY:
                     # Mark the goal has reached
-                    self._goal.reached = True
+                    self._goal['reached'] = True
 
                     # We schedule the callback in the near future. This is to make
                     # sure we finish all our work before the callback is called.
@@ -318,7 +321,7 @@ class Controller():
             if self._last_ok != 0:
                 # Reset last ok since we are in motion
                 self._last_ok = 0
-                self._goal.reached = False
+                self._goal['reached'] = False
                 # self.emit('goalLeft', this._state);
 
         # Get Raw command from PID
@@ -328,7 +331,7 @@ class Controller():
         uyaw = self._pid_yaw.getCommand(eyaw)
 
         # Ceil commands and map them to drone orientation
-        yaw  = self._state.yaw
+        yaw  = self._state['yaw']
         cx   = self.within(math.cos(yaw) * ux + math.sin(yaw) * uy, -1, 1)
         cy   = self.within(-math.sin(yaw) * ux + math.cos(yaw) * uy, -1, 1)
         cz   = self.within(uz, -1, 1)
@@ -350,7 +353,7 @@ class Controller():
             self._drone.forward(cx)
 
         if math.abs(cy) > 0.01:
-            ._drone.right(cy)
+            self._drone.right(cy)
 
         if math.abs(cz) > 0.01:
             self._drone.up(cz)
