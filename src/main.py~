@@ -1,6 +1,6 @@
 #!/usr/bin/env python 
 
-from controller import Controller
+from controler import Controller
 
 def main():
 	controller = Controller()

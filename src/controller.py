@@ -71,8 +71,8 @@ class Controller():
         and send a stop command to the drone.
     """
     def disable(self):
-        this._enabled = False
-        this._drone.stop()
+        self._enabled = False
+        self._drone.stop()
 
     """
         Sets the goal to the current state and attempt to hover on top.
@@ -253,7 +253,7 @@ class Controller():
 
     def _processNavdata(self, navdata):
         # EKF prediction step
-        this._ekf.predict(navdata)
+        self._ekf.predict(navdata)
 
         # Keep a local copy of the state
         self._state = self._ekf.getState()
@@ -280,10 +280,10 @@ class Controller():
             return
 
         # Compute error between current state and goal
-        ex   = self._goal.x - self._state.x if (this._goal.x != None) else 0
-        ey   = self._goal.y - self._state.y if (this._goal.y != None) else 0
-        ez   = self._goal.z - self._state.z if (this._goal.z != None) else 0
-        eyaw = self._goal.yaw - self._state.yaw if (this._goal.yaw != None) else 0
+        ex   = self._goal.x - self._state.x if (self._goal.x != None) else 0
+        ey   = self._goal.y - self._state.y if (self._goal.y != None) else 0
+        ez   = self._goal.z - self._state.z if (self._goal.z != None) else 0
+        eyaw = self._goal.yaw - self._state.yaw if (self._goal.yaw != None) else 0
 
         # Normalize eyaw within [-180, 180]
         while eyaw < -Math.PI:
@@ -322,10 +322,10 @@ class Controller():
                 # self.emit('goalLeft', this._state);
 
         # Get Raw command from PID
-        ux = this._pid_x.getCommand(ex)
-        uy = this._pid_y.getCommand(ey)
-        uz = this._pid_z.getCommand(ez)
-        uyaw = this._pid_yaw.getCommand(eyaw)
+        ux = self._pid_x.getCommand(ex)
+        uy = self._pid_y.getCommand(ey)
+        uz = self._pid_z.getCommand(ez)
+        uyaw = self._pid_yaw.getCommand(eyaw)
 
         # Ceil commands and map them to drone orientation
         yaw  = self._state.yaw
@@ -350,7 +350,7 @@ class Controller():
             self._drone.forward(cx)
 
         if math.abs(cy) > 0.01:
-            this._drone.right(cy)
+            self._drone.right(cy)
 
         if math.abs(cz) > 0.01:
             self._drone.up(cz)
