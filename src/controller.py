@@ -40,7 +40,7 @@ class Controller():
         self._callback = None
 
         # The last known state
-        self._state   = {"x": 0, "y": 0, "yaw": 0}
+        self._state   = {"x": 0, "y": 0, "z": 0, "yaw": 0}
 
         # The last time we have reached the goal (all control commands = 0)
         self._last_ok = 0;
@@ -85,6 +85,12 @@ class Controller():
             "yaw": self._state.yaw
         });
 
+    def land(self):
+        self._drone.land()
+
+    def takeOff(self):
+        self._drone.takeOff()
+
     """
         Reset the kalman filter to its base state (default is x:0, y:0, yaw:0).
         This is especially usefull to set mark the drone position as the starting position
@@ -111,8 +117,8 @@ class Controller():
         self._go({
             "x": gx,
             "y": gy,
-            "z": state.z,
-            "yaw": state.yaw
+            "z": state['z'],
+            "yaw": state['yaw']
         })
 
     """
@@ -240,7 +246,7 @@ class Controller():
 
         # Make sure we don't attempt to go too low
         if hasattr(goal, 'z'):
-            goal.['z'] = Math.max(goal['z'], 0.5)
+            goal['z'] = Math.max(goal['z'], 0.5)
 
         # Update our goal
         self._goal = goal
@@ -258,12 +264,11 @@ class Controller():
 
         # Keep a local copy of the state
         self._state = self._ekf.getState()
-        self._state['z'] = navdata['altd']
-        self._state['vx'] = navdata['vx'] / 1000 # We want m/s instead of mm/s
-        self._state['vy'] = navdata['vy'] / 1000
-        print(self._state)
+        self._state['z'] = navdata.altd
+        self._state['vx'] = navdata.vx / 1000 # We want m/s instead of mm/s
+        self._state['vy'] = navdata.vy / 1000
 
-    def within(x, min, max):
+    def within(self, x, min, max):
         if x < min:
             return min
 
@@ -272,7 +277,7 @@ class Controller():
 
         return x
 
-    def _control(navdata):
+    def _control(self, navdata):
         # Do not control if not enabled
         if not self._enabled:
             return
@@ -282,7 +287,6 @@ class Controller():
             return
 
         # Compute error between current state and goal
-        hasattr(goal, 'z')
         ex   = self._goal['x'] - self._state['x'] if ('x' in self._goal) else 0
         ey   = self._goal['y'] - self._state['y'] if ('y' in self._goal) else 0
         ez   = self._goal['z'] - self._state['z'] if ('z' in self._goal) else 0
@@ -292,7 +296,7 @@ class Controller():
         while eyaw < -math.pi:
             eyaw += (2 * math.pi)
 
-        while eyaw >  math.PI:
+        while eyaw >  math.pi:
             eyaw -= (2 * math.pi)
 
         # Check if we are within the target area
