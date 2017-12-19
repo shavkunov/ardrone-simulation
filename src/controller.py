@@ -256,40 +256,6 @@ class Controller():
         # EKF prediction step
         this._ekf.predict(navdata)
 
-        """
-            If a tag is detected by the bottom camera, we attempt a correction step
-            This require prior configuration of the client to detect the oriented
-            roundel and to enable the vision detect in navdata.
-            TODO: Add documentation about this
-        """
-        """if (d.visionDetect && d.visionDetect.nbDetected > 0) {
-            // Fetch detected tag position, size and orientation
-            var xc = d.visionDetect.xc[0]
-              , yc = d.visionDetect.yc[0]
-              , wc = d.visionDetect.width[0]
-              , hc = d.visionDetect.height[0]
-              , yaw = d.visionDetect.orientationAngle[0]
-              , dist = d.visionDetect.dist[0] / 100 # Need meters
-              ;
-
-            """
-               Compute measure tag position (relative to drone) by
-               back-projecting the pixel position p(x,y) to the drone
-               coordinate system P(X,Y).
-               TODO: Should we use dist or the measure altitude ?
-            """
-            var camera = this._camera.p2m(xc + wc/2, yc + hc/2, dist);
-
-            // We convert this to the controller coordinate system
-            var measured = {x: -1 * camera.y, y: camera.x};
-
-            // Rotation is provided by the drone, we convert to radians
-            measured.yaw = yaw.toRad();
-
-            // Execute the EKS correction step
-            this._ekf.correct(measured, this._tag);
-        } """
-
         # Keep a local copy of the state
         self._state = self._ekf.getState()
         self._state.z = navdata.altd

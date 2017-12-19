@@ -29,6 +29,17 @@ class Drone():
     def stop(self):
         self.Command(0, 0, 0, 0, 0, 0)
 
+    def forward(self, speed):
+        self.Command(speed, 0, 0, 0, 0, 0)
+
+    def right(self, speed):
+        self.Command(0, speed, 0, 0, 0, 0)
+
+    def up(self, speed):
+        self.Command(0, 0, speed, 0, 0, 0)
+
+    def clockwise(self, speed):
+        self.Command(0, 0, 0, 0, 0, speed)
 
     def Command(self, linear_x, linear_y, linear_z, angular_x, angular_y, angular_z):
         self.command.linear.x = linear_x

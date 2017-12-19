@@ -32,7 +32,6 @@ class PID(self, kp, ki, kd):
 
             # Integrate error
             self._error_sum += e * dt
-        }
 
         # Update our trackers
         self._last_time = time
