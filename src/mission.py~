@@ -11,6 +11,10 @@ class Mission():
         controller = self._controller
         self._commands.append(lambda : controller.takeOff())
 
+    def land(self):
+        controller = self._controller
+        self._commands.append(lambda : controller.land())
+
 
     def up(self, distance):
         controller = self._controller
@@ -37,12 +41,12 @@ class Mission():
         while len(commands) > 0:
             command = commands.pop(0)
 
-            while controller.isBusy():
+            while controller.isBusy() and :
                 pass # bad: active waiting
             
             command()
 
-        hover()
+        self.hover()
         rospy.spin()
             
                 

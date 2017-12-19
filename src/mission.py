@@ -41,12 +41,12 @@ class Mission():
         while len(commands) > 0:
             command = commands.pop(0)
 
-            while controller.isBusy():
+            while controller.isCommandExecuting() :
                 pass # bad: active waiting
             
             command()
 
-        hover()
+        self.hover()
         rospy.spin()
             
                 

@@ -77,6 +77,15 @@ class Controller():
     def isBusy(self):
         return self._busy
 
+    def isPrevGoalReached(self):
+        if self._goal == None:
+            return self.isBusy()
+
+        return self._goal['reached']
+
+    def isCommandExecuting(self):
+        return self.isBusy() or not self.isPrevGoalReached()
+
     """
         Sets the goal to the current state and attempt to hover on top.
     """
