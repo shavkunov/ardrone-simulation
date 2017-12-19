@@ -270,7 +270,6 @@ class Controller():
             return
 
         return x
-    }
 
     def _control(navdata):
         # Do not control if not enabled
