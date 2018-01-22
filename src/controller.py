@@ -74,14 +74,16 @@ class Controller():
         self._enabled = False
         self._drone.stop()
 
+    """
+        True if drone is busy and executing command.
+    """
     def isBusy(self):
-        return self._busy
+        goal_flag = True
 
-    def isCommandExecuting(self):
-        if self._goal == None:
-            return self.isBusy()
+        if self._goal != None:
+            goal_flag = self._goal["reached"]
 
-        return not self._goal['reached']
+        return self._busy or not goal_flag
 
     """
         Sets the goal to the current state and attempt to hover on top.
