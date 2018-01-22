@@ -1,5 +1,7 @@
 # AR Drone
 
+This repostory contains python port of the ardrone library: https://github.com/eschnou/ardrone-autonomy
+
 ## Install
 
 ### Prepare environment
