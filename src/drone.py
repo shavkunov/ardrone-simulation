@@ -5,13 +5,11 @@ from ardrone_autonomy.msg import Navdata
 
 import rospy
 import time
-import logging
 
 COMMAND_PERIOD = 100 #ms
 
 class Drone():
     def __init__(self, navdataListener):
-        logging.basicConfig(filename='logs',level=logging.DEBUG)
         rospy.init_node('ardrone_flight', anonymous=False)
         self.rate = rospy.Rate(10)
         self.pubTakeoff = rospy.Publisher("ardrone/takeoff",Empty, queue_size=10)
@@ -23,45 +21,50 @@ class Drone():
         rospy.on_shutdown(self.land)
 
     def takeOff(self):
-        logging.debug('sending take off')
+        print('sending take off')
         time.sleep(3) # time to initialize
         self.pubTakeoff.publish(Empty())
 
         time.sleep(3) # time to execute taking off
         self.rate.sleep()
-        logging.debug('take off is executed')
+        print('take off is executed')
 
     def land(self):
-        logging.debug('sending land')
+        print('sending land')
         self.pubLand.publish(Empty())
         self.rate.sleep()
-        logging.debug('land is executed')
+        print('land is executed')
         
 
     def stop(self):
-        logging.debug('sending stop')
+        print('sending stop')
         self.Command(0, 0, 0, 0, 0, 0)
-        logging.debug('stop is executed')
+        print('stop is executed')
+
 
     def forward(self, speed):
-        logging.debug('sending forward with speed:{}'.format(speed))
+        print('sending forward with speed:{}'.format(speed))
         self.Command(speed, 0, 0, 0, 0, 0)
-        logging.debug('forward is executed')
+        print('forward is executed')
+
 
     def right(self, speed):
-        logging.debug('sending right with speed:{}'.format(speed))
+        print('sending right with speed:{}'.format(speed))
         self.Command(0, speed, 0, 0, 0, 0)
-        logging.debug('right command is executed')
+        print('right command is executed')
+
 
     def up(self, speed):
-        logging.debug('sending up with speed:{}'.format(speed))
+        print('sending up with speed:{}'.format(speed))
         self.Command(0, 0, speed, 0, 0, 0)
-        logging.debug('up is executed')
+        print('up is executed')
+
 
     def clockwise(self, speed):
-        logging.debug('sending clockwise with speed:{}'.format(speed))
+        print('sending clockwise with speed:{}'.format(speed))
         self.Command(0, 0, 0, 0, 0, speed)
-        logging.debug('clockwise is executed')
+        print('clockwise is executed')
+
 
     def Command(self, linear_x, linear_y, linear_z, angular_x, angular_y, angular_z):
         self.command.linear.x = linear_x

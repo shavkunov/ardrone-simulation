@@ -1,6 +1,5 @@
 from drone import Drone
-from pid import PID
-from pid import getDateNow
+from speed_corrector import SpeedCorrector
 from ekf import EKF
 import calendar
 import time
@@ -18,19 +17,16 @@ class Controller():
         self._tag = {"x": 0, "y": 0, "yaw": 0} # TODO: what?
 
         # Configure the four PID required to control the drone
-        self._pid_x   = PID(0.5, 0, 0.35)
-        self._pid_y   = PID(0.5, 0, 0.35)
-        self._pid_z   = PID(0.8, 0, 0.35)
-        self._pid_yaw = PID(1.0, 0, 0.30)
+        self._pid_x   = SpeedCorrector()
+        self._pid_y   = SpeedCorrector()
+        self._pid_z   = SpeedCorrector()
+        self._pid_yaw = SpeedCorrector()
 
         # kalman filter is used for the drone state estimation
         self._ekf = EKF()
 
         # Used to process images and backproject them
         # this._camera  = new Camera(); TODO
-
-        # Control will only work if enabled
-        self._enabled = False
 
         # Ensure that we don't enter the processing loop twice
         self._busy = False
@@ -54,25 +50,6 @@ class Controller():
 
         # drone to manipulate
         self._drone = Drone(navdataListener)
-
-    """
-        Enable auto-pilot. The controller will attempt to bring
-        the drone (and maintain it) to the goal.
-    """
-    def enable(self):
-        self._pid_x.reset()
-        self._pid_y.reset()
-        self._pid_z.reset()
-        self._pid_yaw.reset()
-        self._enabled = True
-
-    """
-        Disable auto-pilot. The controller will stop all actions
-        and send a stop command to the drone.
-    """
-    def disable(self):
-        self._enabled = False
-        self._drone.stop()
 
     """
         True if drone is busy and executing command.
@@ -113,7 +90,6 @@ class Controller():
         of the drone.
     """
     def zero(self):
-        self.disable()
         self._ekf.reset()
 
     """
@@ -246,13 +222,9 @@ class Controller():
 
         return self._go(goal)
 
-    def _go(self, goal=None):
-        # Since we are going to modify goal settings, we disable the controller, just in case.
-        self.disable()
-
-        # If no goal given, assume an empty goal
+    def _go(self, goal):
         if goal == None:
-            goal = {}
+            return
 
         # Normalize the yaw, to make sure we don't spin 360deg for nothing
         if hasattr(goal, 'yaw'):
@@ -261,20 +233,16 @@ class Controller():
 
         # Make sure we don't attempt to go too low
         if hasattr(goal, 'z'):
-            goal['z'] = math.max(goal['z'], 0.5)
+            goal['z'] = math.max(goal['z'], 1)
 
         # Update our goal
         self._goal = goal
         self._goal['reached'] = False
 
-        #print("updated goal", self._goal)
-        #print("state", self._state)
+        print("updated goal", self._goal)
 
         # Keep track of the callback to trigger when we reach the goal
         # this._callback = callback TODO
-
-        # (Re)-Enable the controller
-        self.enable()
 
     def _processNavdata(self, navdata):
         # EKF prediction step
@@ -287,32 +255,28 @@ class Controller():
         self._state['vy'] = navdata.vy / 1000
 
     def within(self, x, min, max):
-        if x < min:
+        # there are different infinities, so it's doesn't matter
+        if str(x) == float('-inf') or x < min:
             return min
 
-        if x > max:
+        if str(x) == float('inf') or x > max:
             return max
 
         return x
 
     def _control(self, navdata):
-        #print("control_____")
-        #print("updated goal", self._goal)
-        #print("state", self._state)
-
-        # Do not control if not enabled
-        if not self._enabled:
-            return
-
         # Do not control if no known state or no goal defines
         if self._goal == None or self._state == None:
             return
+
+        print("goal", self._goal)
 
         # Compute error between current state and goal
         ex   = self._goal['x'] - self._state['x'] if ('x' in self._goal) else 0
         ey   = self._goal['y'] - self._state['y'] if ('y' in self._goal) else 0
         ez   = self._goal['z'] - self._state['z'] if ('z' in self._goal) else 0
         eyaw = self._goal['yaw'] - self._state['yaw'] if ('yaw' in self._goal) else 0
+
 
         # Normalize eyaw within [-180, 180]
         while eyaw < -math.pi:
@@ -324,25 +288,12 @@ class Controller():
         # Check if we are within the target area
         if (abs(ex) < EPS_LIN) and (abs(ey) < EPS_LIN) \
             and (abs(ez) < EPS_ALT) and (abs(eyaw) < EPS_ANG):
-            #print("within targer area")
             # Have we been here before ?
             if not self._goal['reached'] and self._last_ok != 0:
                 # And for long enough ?
-                #print("checking for stable delay")
-                #print("stable diff", getDateNow() - self._last_ok)
                 if (getDateNow() - self._last_ok) > STABLE_DELAY:
                     # Mark the goal has reached
                     self._goal['reached'] = True
-
-                    # We schedule the callback in the near future. This is to make
-                    # sure we finish all our work before the callback is called.
-                    if self._callback != None:
-                        # TODO: sleep for 10 ms
-                        # setTimeout(self._callback, 10)
-                        self._callback = None
-
-                    # Emit a state reached
-                    # self.emit('goalReached', this._state);
             else:
                 self._last_ok = getDateNow()
         else:
@@ -353,11 +304,15 @@ class Controller():
                 self._goal['reached'] = False
                 # self.emit('goalLeft', this._state);
 
+        print("errors x y z yaw : {} {} {} {}".format(ex, ey, ez, eyaw))
+
         # Get Raw command from PID
-        ux = self._pid_x.getCommand(ex)
-        uy = self._pid_y.getCommand(ey)
-        uz = self._pid_z.getCommand(ez)
-        uyaw = self._pid_yaw.getCommand(eyaw)
+        ux = self._pid_x.getAxisSpeed(ex)
+        uy = self._pid_y.getAxisSpeed(ey)
+        uz = self._pid_z.getAxisSpeed(ez)
+        uyaw = self._pid_yaw.getAngleSpeed(eyaw)
+
+        print("raw speed x y z yaw : {} {} {} {}".format(ux, uy, uz, uyaw))
 
         # Ceil commands and map them to drone orientation
         yaw  = self._state['yaw']
@@ -366,16 +321,8 @@ class Controller():
         cz   = self.within(uz, -1, 1)
         cyaw = self.within(uyaw, -1, 1)
 
-        # Emit the control data for auditing
-        # TODO : add this as property for debugging
-        """this.emit('controlData', {
-            state:   this._state,
-            goal:    this._goal,
-            error:   {ex: ex, ey: ey, ez: ez, eyaw: eyaw},
-            control: {ux: ux, uy: uy, uz: uz, uyaw: uyaw},
-            last_ok: this._last_ok,
-            tag:     (d.visionDetect && d.visionDetect.nbDetected > 0) ? 1 : 0
-        });"""
+        print("ceils speed x y z yaw : {} {} {} {}".format(cx, cy, cz, cyaw))
+        print("____")
 
         # Send commands to drone
         if abs(cx) > 0.01:
@@ -389,3 +336,8 @@ class Controller():
 
         if abs(cyaw) > 0.01:
             self._drone.clockwise(cyaw)
+
+
+# calculates elapsed seconds from 1970
+def getDateNow():
+    return calendar.timegm(time.gmtime())
