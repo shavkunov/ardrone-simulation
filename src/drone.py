@@ -11,7 +11,7 @@ COMMAND_PERIOD = 100 #ms
 class Drone():
     def __init__(self, navdataListener):
         rospy.init_node('ardrone_flight', anonymous=False)
-        self.rate = rospy.Rate(10)
+        self.rate = rospy.Rate(3)
         self.pubTakeoff = rospy.Publisher("ardrone/takeoff",Empty, queue_size=10)
         self.pubLand = rospy.Publisher("ardrone/land",Empty, queue_size=10)
         self.pubCommand = rospy.Publisher('cmd_vel',Twist, queue_size=10)
@@ -25,45 +25,45 @@ class Drone():
         time.sleep(3) # time to initialize
         self.pubTakeoff.publish(Empty())
 
-        time.sleep(3) # time to execute taking off
+        time.sleep(5) # time to execute taking off
         self.rate.sleep()
-        print('take off is executed')
+        print('take off is executed\n')
 
     def land(self):
         print('sending land')
         self.pubLand.publish(Empty())
         self.rate.sleep()
-        print('land is executed')
+        print('land is executed\n')
         
 
     def stop(self):
         print('sending stop')
         self.Command(0, 0, 0, 0, 0, 0)
-        print('stop is executed')
+        print('stop is executed\n')
 
 
     def forward(self, speed):
         print('sending forward with speed:{}'.format(speed))
         self.Command(speed, 0, 0, 0, 0, 0)
-        print('forward is executed')
+        print('forward is executed\n')
 
 
     def right(self, speed):
         print('sending right with speed:{}'.format(speed))
-        self.Command(0, speed, 0, 0, 0, 0)
-        print('right command is executed')
+        self.Command(0, -speed, 0, 0, 0, 0)
+        print('right command is executed\n')
 
 
     def up(self, speed):
         print('sending up with speed:{}'.format(speed))
         self.Command(0, 0, speed, 0, 0, 0)
-        print('up is executed')
+        print('up is executed\n')
 
 
     def clockwise(self, speed):
         print('sending clockwise with speed:{}'.format(speed))
-        self.Command(0, 0, 0, 0, 0, speed)
-        print('clockwise is executed')
+        self.Command(0, 0, 0, 0, 0, -speed)
+        print('clockwise is executed\n')
 
 
     def Command(self, linear_x, linear_y, linear_z, angular_x, angular_y, angular_z):
@@ -75,3 +75,5 @@ class Drone():
         self.command.angular.z = angular_z
         self.pubCommand.publish(self.command)
         self.rate.sleep()
+
+

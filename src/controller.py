@@ -5,10 +5,11 @@ import calendar
 import time
 import math
 
-EPS_LIN      = 0.1; # We are ok with 10 cm horizontal precision
-EPS_ALT      = 0.1; # We are ok with 10 cm altitude precision
-EPS_ANG      = 0.1; # We are ok with 0.1 rad precision (5 deg)
-STABLE_DELAY = 5; # Time in s to wait before declaring the drone on target
+EPS_LIN      = 2
+EPS_ALT      = 2
+EPS_ANG      = 2 
+
+PRECISION = 0.4 # used to determine sending speed to every coordinate
 
 class Controller():
     def __init__(self):
@@ -35,6 +36,8 @@ class Controller():
         self._goal     = None
         self._callback = None
 
+        self.inFlight = None
+
         # The last known state
         self._state   = {"x": 0, "y": 0, "z": 0, "yaw": 0}
 
@@ -43,24 +46,41 @@ class Controller():
 
         # Register the listener on navdata for our control loop
         def navdataListener(navdata):
-                self._busy = True
                 self._processNavdata(navdata)
                 self._control(navdata)
-                self._busy = False
 
         # drone to manipulate
         self._drone = Drone(navdataListener)
 
-    """
-        True if drone is busy and executing command.
-    """
-    def isBusy(self):
-        goal_flag = True
 
-        if self._goal != None:
-            goal_flag = self._goal["reached"]
+    def isTakingOff(self):
+        #print("is taking off?")
+        if self.inFlight == None:
+            return False
 
-        return self._busy or not goal_flag
+        #print(not self.inFlight)
+        return not self.inFlight
+
+    def isGoalReached(self):
+        #print("is goal reached?")
+        goal = self._goal
+
+        if goal == None:
+            return True
+        
+        #print(goal['reached'])
+        return goal['reached']
+
+    
+    def isCommandExecuting(self):
+        if self.isTakingOff():
+            return True
+
+        if self.inFlight:
+            return not self.isGoalReached() 
+
+        return False # we are actually landed
+            
 
     """
         Sets the goal to the current state and attempt to hover on top.
@@ -74,23 +94,14 @@ class Controller():
         });
 
     def land(self):
-        self._busy = True
+        self.inFlight = False
         self._drone.land()
-        self._busy = False
+        self.inFlight = None
 
     def takeOff(self):
-        self._busy = True
+        self.inFlight = False
         self._drone.takeOff()
-        self._busy = False
-
-    """
-        Reset the kalman filter to its base state (default is x:0, y:0, yaw:0).
-        This is especially usefull to set mark the drone position as the starting position
-        after takeoff. We must disable, to ensure that the zeroing does not trigger a sudden move
-        of the drone.
-    """
-    def zero(self):
-        self._ekf.reset()
+        self.inFlight = True
 
     """
         Move forward (direction faced by the front camera) by the given
@@ -235,14 +246,13 @@ class Controller():
         if hasattr(goal, 'z'):
             goal['z'] = math.max(goal['z'], 1)
 
-        # Update our goal
         self._goal = goal
         self._goal['reached'] = False
-
         print("updated goal", self._goal)
 
         # Keep track of the callback to trigger when we reach the goal
-        # this._callback = callback TODO
+        # this._callback = callback TODO  
+   
 
     def _processNavdata(self, navdata):
         # EKF prediction step
@@ -250,9 +260,9 @@ class Controller():
 
         # Keep a local copy of the state
         self._state = self._ekf.getState()
-        self._state['z'] = navdata.altd / 1000 # altidude in mm, we want meters
-        self._state['vx'] = navdata.vx / 1000 # We want m/s instead of mm/s
-        self._state['vy'] = navdata.vy / 1000
+        self._state['z'] = navdata.altd / 1000.0 # altidude in mm, we want meters
+        self._state['vx'] = navdata.vx / 1000.0 # We want m/s instead of mm/s
+        self._state['vy'] = navdata.vy / 1000.0
 
     def within(self, x, min, max):
         # there are different infinities, so it's doesn't matter
@@ -270,13 +280,13 @@ class Controller():
             return
 
         print("goal", self._goal)
+        print("state", self._state)
 
         # Compute error between current state and goal
         ex   = self._goal['x'] - self._state['x'] if ('x' in self._goal) else 0
         ey   = self._goal['y'] - self._state['y'] if ('y' in self._goal) else 0
         ez   = self._goal['z'] - self._state['z'] if ('z' in self._goal) else 0
         eyaw = self._goal['yaw'] - self._state['yaw'] if ('yaw' in self._goal) else 0
-
 
         # Normalize eyaw within [-180, 180]
         while eyaw < -math.pi:
@@ -288,21 +298,9 @@ class Controller():
         # Check if we are within the target area
         if (abs(ex) < EPS_LIN) and (abs(ey) < EPS_LIN) \
             and (abs(ez) < EPS_ALT) and (abs(eyaw) < EPS_ANG):
-            # Have we been here before ?
-            if not self._goal['reached'] and self._last_ok != 0:
-                # And for long enough ?
-                if (getDateNow() - self._last_ok) > STABLE_DELAY:
-                    # Mark the goal has reached
-                    self._goal['reached'] = True
-            else:
-                self._last_ok = getDateNow()
-        else:
-            # If we just left the goal, we notify
-            if self._last_ok != 0:
-                # Reset last ok since we are in motion
-                self._last_ok = 0
-                self._goal['reached'] = False
-                # self.emit('goalLeft', this._state);
+                self._goal['reached'] = True
+                print("Reached the goal!")
+                return
 
         print("errors x y z yaw : {} {} {} {}".format(ex, ey, ez, eyaw))
 
@@ -325,17 +323,21 @@ class Controller():
         print("____")
 
         # Send commands to drone
-        if abs(cx) > 0.01:
-            self._drone.forward(cx)
-
-        if abs(cy) > 0.01:
-            self._drone.right(cy)
-
-        if abs(cz) > 0.01:
-            self._drone.up(cz)
-
-        if abs(cyaw) > 0.01:
+        if abs(cyaw) > PRECISION:
             self._drone.clockwise(cyaw)
+            return
+
+        if abs(cx) > PRECISION:
+            self._drone.forward(cx)
+            return
+
+        if abs(cy) > PRECISION:
+            self._drone.right(cy)
+            return
+
+        if abs(cz) > PRECISION:
+            self._drone.up(cz)
+            return
 
 
 # calculates elapsed seconds from 1970

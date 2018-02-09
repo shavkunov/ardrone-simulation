@@ -4,13 +4,34 @@ from mission import Mission
 from drone import Drone
 import time
 
-def main():
+def square():
     mission = Mission()
+
     mission.takeOff()
-    #mission.forward(5)
-    #mission.land()
+    mission.backward(7)
+    mission.counterClockwise(90)
+    mission.forward(7)
+    mission.clockwise(90)
+    mission.forward(7)
+    mission.clockwise(90)
+    mission.forward(7)
+    mission.land()
 
     mission.execute()
+
+def simpleTest():
+    mission = Mission()
+
+    mission.takeOff()
+    mission.backward(10)
+    mission.forward(10)
+    mission.land()
+
+    mission.execute()
+
+def main():
+    simpleTest()
+    #square()
 
 	
 if __name__ == '__main__':

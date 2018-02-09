@@ -26,32 +26,38 @@ class Mission():
         controller = self._controller
         self._commands.append(lambda : controller.forward(distance))
 
+    def backward(self, distance):
+        controller = self._controller
+        self._commands.append(lambda : controller.backward(distance))
+
 
     def clockwise(self, angle):
         controller = self._controller
         self._commands.append(lambda : controller.clockwise(angle))
 
+    def counterClockwise(self, angle):
+        controller = self._controller
+        self._commands.append(lambda : controller.counterClockwise(angle))
+
 
     def hover(self):
-        self._controller.hover()
+        controller = self._controller
+        self._commands.append(lambda : controller.hover())
 
 
     def execute(self):
         commands = self._commands
         controller = self._controller
         
-        number = 0
+        number = 1
         while len(commands) > 0:
             command = commands.pop(0)
-            print("executing mission command: ", number)
-        
-            while controller.isBusy():
-                pass # bad: active waiting
+       
+            while controller.isCommandExecuting():
+                pass
             
+            print("executing mission command: ", number)
             command()
-
-            if number > 0:            
-                self.hover()
 
             number += 1
         
