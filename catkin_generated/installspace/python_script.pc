@@ -1,8 +1,0 @@
-prefix=/home/osboxes/tum_simulator_ws/install
-
-Name: python_script
-Description: Description of python_script
-Version: 0.0.0
-Cflags: 
-Libs: -L/home/osboxes/tum_simulator_ws/install/lib 
-Requires: 
