@@ -1,6 +1,6 @@
 from drone import Drone
 from speed_corrector import SpeedCorrector
-from ekf import EKF
+from estimate import StateEstimate
 import calendar
 import time
 import math
@@ -20,7 +20,7 @@ class Controller():
         self._pid_yaw = SpeedCorrector()
 
         # kalman filter is used for the drone state estimation
-        self._ekf = EKF()
+        self._estimate = StateEstimate()
 
         # Used to process images and backproject them
         # this._camera  = new Camera(); TODO
@@ -251,10 +251,10 @@ class Controller():
 
     def _processNavdata(self, navdata):
         # EKF prediction step
-        self._ekf.predict(navdata)
+        self._estimate.calculateState(navdata)
 
         # Keep a local copy of the state
-        self._state = self._ekf.getState()
+        self._state = self._estimate.getState()
 
     def within(self, x, min, max):
         # there are different infinities, so it's doesn't matter

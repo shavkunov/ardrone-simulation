@@ -16,7 +16,7 @@ class Drone():
         self.pubLand = rospy.Publisher("ardrone/land",Empty, queue_size=100)
         self.pubCommand = rospy.Publisher('cmd_vel',Twist, queue_size=100)
         self.command = Twist()
-        self.navdata = rospy.Subscriber("ardrone/navdata", Navdata, navdataListener, queue_size=100)
+        self.navdata = rospy.Subscriber("ardrone/navdata", Navdata, navdataListener, queue_size=100, buff_size=2**24)
         #self.commandTimer = rospy.Timer(rospy.Duration(COMMAND_PERIOD/1000.0), self.Command)
         rospy.on_shutdown(self.land)
 
