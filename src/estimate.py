@@ -38,9 +38,9 @@ class StateEstimate():
         state['y']   = state['y'] + o["dx"] * np.math.sin(state['yaw']) + o["dy"] * np.math.cos(state['yaw'])
         state['yaw'] = state['yaw'] + o["dyaw"]
         state['z'] = data.altd / 1000.0 # altidude in mm, we want meters
-        state['vx'] = vx
-        state['vy'] = vy
-        print('vx', vx)
+        #state['vx'] = vx
+        #state['vy'] = vy
+        #print('vx', vx)
 
 
         # Normalize the yaw value

@@ -25,8 +25,8 @@ def simpleTest():
     mission.takeOff()
     
     
-    mission.forward(5)
-    mission.backward(5)
+    mission.forward(5 * 50)
+    mission.backward(5 * 50)
     mission.land()
 
     mission.execute()

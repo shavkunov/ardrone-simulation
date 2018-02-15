@@ -1,5 +1,6 @@
 import calendar
 import time
+import numpy as np
 
 """
     It's used to control drone's -1..1 parameters.
@@ -9,11 +10,13 @@ class SpeedCorrector():
     """
         e -- coordinate of error vector. 
     """
-    def getAxisSpeed(self, e):
-        if e < 4:
-            return e/15
-        
-        return e/7
+    def getAxisSpeed(self, x):
+        sign = 1
+        if x < 0:
+            sign = -1
+
+        x = abs(x)
+        return sign * (0.15*x + 1.5)/30.0
 
     def getAngleSpeed(self, angle):
-        return angle/60
+        return angle/60.0

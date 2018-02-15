@@ -1,5 +1,6 @@
 from controller import Controller
 import rospy
+import time
 
 class Mission():
     def __init__(self):
@@ -22,7 +23,7 @@ class Mission():
         self._commands.append(lambda : controller.up(distance))
 
 
-    def forward(self, distance):
+    def forward(self, distance): # in meters!
         controller = self._controller
         self._commands.append(lambda : controller.forward(distance))
 
@@ -57,6 +58,7 @@ class Mission():
                 pass
             
             print("executing mission command: ", number)
+            time.sleep(1.0)
             command()
 
             number += 1

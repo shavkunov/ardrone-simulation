@@ -4,12 +4,13 @@ from estimate import StateEstimate
 import calendar
 import time
 import math
+import numpy as np
 
-EPS_LIN      = 2
-EPS_ALT      = 2
-EPS_ANG      = 2 
+EPS_LIN      = 20
+EPS_ALT      = 20
+EPS_ANG      = 20
 
-PRECISION = 0.4 # used to determine sending speed to every coordinate
+PRECISION = 0.1 # used to determine sending speed to every coordinate
 
 class Controller():
     def __init__(self):
@@ -40,7 +41,7 @@ class Controller():
 
         # Register the listener on navdata for our control loop
         def navdataListener(navdata):
-                print("seconds:", navdata.header.stamp.secs)
+                #print("seconds:", navdata.header.stamp.secs)
                 self._processNavdata(navdata)
                 self._control(navdata)
 
@@ -110,7 +111,10 @@ class Controller():
         gx = state['x'] + math.cos(state['yaw']) * distance
         gy = state['y'] + math.sin(state['yaw']) * distance
 
-        # Assign the new goal. TODO: callback?
+        print("forward state before goal", state)
+        print("gx gy distance", gx, gy, distance)
+
+        # Assign the new goal. 
         self._go({
             "x": gx,
             "y": gy,
@@ -119,9 +123,10 @@ class Controller():
         })
 
     """
-        Move backward by the given distance (in meters).
+        Move backward by the given distance.
     """
     def backward(self, distance):
+        print('backward distance', distance)
         self.forward(-distance)
 
     """
@@ -221,7 +226,6 @@ class Controller():
         x,y,z in meters
         yaw in degrees
     """
-    # TODO: add callback
     def go(self, goal):
         if hasattr(goal, 'yaw'):
             goal['yaw'] = math.radians(goal['yaw'])
@@ -238,8 +242,8 @@ class Controller():
             goal['yaw'] = math.atan2(math.sin(yaw), math.cos(yaw))
 
         # Make sure we don't attempt to go too low
-        if hasattr(goal, 'z'):
-            goal['z'] = math.max(goal['z'], 1)
+        #if 'z' in goal:
+        #    goal['z'] = np.max(goal['z'], 1.0)
 
         self._goal = goal
         self._goal['reached'] = False
@@ -250,7 +254,7 @@ class Controller():
    
 
     def _processNavdata(self, navdata):
-        # EKF prediction step
+        # Calculate state
         self._estimate.calculateState(navdata)
 
         # Keep a local copy of the state
@@ -271,8 +275,11 @@ class Controller():
         if self._goal == None or self._state == None:
             return
 
-        #print("goal", self._goal)
-        #print("state", self._state)
+        if self._goal['reached']:
+            return
+
+        print("goal", self._goal)
+        print("state", self._state)
 
         # Compute error between current state and goal
         ex   = self._goal['x'] - self._state['x'] if ('x' in self._goal) else 0
@@ -294,7 +301,7 @@ class Controller():
                 print("Reached the goal!")
                 return
 
-        #print("errors x y z yaw : {} {} {} {}".format(ex, ey, ez, eyaw))
+        print("errors x y z yaw : {} {} {} {}".format(ex, ey, ez, eyaw))
 
         # Get Raw command from PID
         ux = self._pid_x.getAxisSpeed(ex)
@@ -311,13 +318,10 @@ class Controller():
         cz   = self.within(uz, -1, 1)
         cyaw = self.within(uyaw, -1, 1)
 
-        #print("ceils speed x y z yaw : {} {} {} {}".format(cx, cy, cz, cyaw))
+        print("ceils speed x y z yaw : {} {} {} {}".format(cx, cy, cz, cyaw))
         #print("____")
 
         # Send commands to drone
-        if abs(cyaw) > PRECISION:
-            self._drone.clockwise(cyaw)
-            return
 
         if abs(cx) > PRECISION:
             self._drone.forward(cx)
@@ -329,6 +333,10 @@ class Controller():
 
         if abs(cz) > PRECISION:
             self._drone.up(cz)
+            return
+
+        if abs(cyaw) > PRECISION:
+            self._drone.clockwise(cyaw)
             return
 
 
