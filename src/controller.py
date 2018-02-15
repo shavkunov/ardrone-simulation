@@ -40,7 +40,7 @@ class Controller():
 
         # Register the listener on navdata for our control loop
         def navdataListener(navdata):
-                print("navdata", navdata)
+                print("seconds:", navdata.header.stamp.secs)
                 self._processNavdata(navdata)
                 self._control(navdata)
 
