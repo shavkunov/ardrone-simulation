@@ -23,11 +23,26 @@ def simpleTest():
     mission = Mission()
 
     mission.takeOff()
-    mission.backward(10)
-    mission.forward(10)
+    
+    
+    mission.forward(5)
+    mission.backward(5)
     mission.land()
 
     mission.execute()
+
+
+def simpleTest2():
+    mission = Mission()
+
+    mission.takeOff()
+    mission.up(15)
+    mission.forward(10)
+    mission.backward(10)
+    mission.land()
+
+    mission.execute()
+
 
 def main():
     simpleTest()

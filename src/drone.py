@@ -11,14 +11,15 @@ COMMAND_PERIOD = 100 #ms
 class Drone():
     def __init__(self, navdataListener):
         rospy.init_node('ardrone_flight', anonymous=False)
-        self.rate = rospy.Rate(3)
-        self.pubTakeoff = rospy.Publisher("ardrone/takeoff",Empty, queue_size=10)
-        self.pubLand = rospy.Publisher("ardrone/land",Empty, queue_size=10)
-        self.pubCommand = rospy.Publisher('cmd_vel',Twist, queue_size=10)
+        self.rate = rospy.Rate(15)
+        self.pubTakeoff = rospy.Publisher("ardrone/takeoff",Empty, queue_size=100)
+        self.pubLand = rospy.Publisher("ardrone/land",Empty, queue_size=100)
+        self.pubCommand = rospy.Publisher('cmd_vel',Twist, queue_size=100)
         self.command = Twist()
-        self.navdata = rospy.Subscriber("ardrone/navdata", Navdata, navdataListener)
+        self.navdata = rospy.Subscriber("ardrone/navdata", Navdata, navdataListener, queue_size=100)
         #self.commandTimer = rospy.Timer(rospy.Duration(COMMAND_PERIOD/1000.0), self.Command)
         rospy.on_shutdown(self.land)
+
 
     def takeOff(self):
         print('sending take off')
@@ -26,8 +27,8 @@ class Drone():
         self.pubTakeoff.publish(Empty())
 
         time.sleep(5) # time to execute taking off
-        self.rate.sleep()
         print('take off is executed\n')
+
 
     def land(self):
         print('sending land')

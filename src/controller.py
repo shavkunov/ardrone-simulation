@@ -13,11 +13,7 @@ PRECISION = 0.4 # used to determine sending speed to every coordinate
 
 class Controller():
     def __init__(self):
-
-        #The position of a roundel tag to detect
-        self._tag = {"x": 0, "y": 0, "yaw": 0} # TODO: what?
-
-        # Configure the four PID required to control the drone
+        # Configure the four correctors for each coordinate
         self._pid_x   = SpeedCorrector()
         self._pid_y   = SpeedCorrector()
         self._pid_z   = SpeedCorrector()
@@ -32,9 +28,7 @@ class Controller():
         # Ensure that we don't enter the processing loop twice
         self._busy = False
 
-        # The current target goal and an optional callback to trigger when goal is reached
         self._goal     = None
-        self._callback = None
 
         self.inFlight = None
 
@@ -46,6 +40,7 @@ class Controller():
 
         # Register the listener on navdata for our control loop
         def navdataListener(navdata):
+                print("navdata", navdata)
                 self._processNavdata(navdata)
                 self._control(navdata)
 
@@ -248,7 +243,7 @@ class Controller():
 
         self._goal = goal
         self._goal['reached'] = False
-        print("updated goal", self._goal)
+        #print("updated goal", self._goal)
 
         # Keep track of the callback to trigger when we reach the goal
         # this._callback = callback TODO  
@@ -260,9 +255,6 @@ class Controller():
 
         # Keep a local copy of the state
         self._state = self._ekf.getState()
-        self._state['z'] = navdata.altd / 1000.0 # altidude in mm, we want meters
-        self._state['vx'] = navdata.vx / 1000.0 # We want m/s instead of mm/s
-        self._state['vy'] = navdata.vy / 1000.0
 
     def within(self, x, min, max):
         # there are different infinities, so it's doesn't matter
@@ -279,8 +271,8 @@ class Controller():
         if self._goal == None or self._state == None:
             return
 
-        print("goal", self._goal)
-        print("state", self._state)
+        #print("goal", self._goal)
+        #print("state", self._state)
 
         # Compute error between current state and goal
         ex   = self._goal['x'] - self._state['x'] if ('x' in self._goal) else 0
@@ -302,7 +294,7 @@ class Controller():
                 print("Reached the goal!")
                 return
 
-        print("errors x y z yaw : {} {} {} {}".format(ex, ey, ez, eyaw))
+        #print("errors x y z yaw : {} {} {} {}".format(ex, ey, ez, eyaw))
 
         # Get Raw command from PID
         ux = self._pid_x.getAxisSpeed(ex)
@@ -310,7 +302,7 @@ class Controller():
         uz = self._pid_z.getAxisSpeed(ez)
         uyaw = self._pid_yaw.getAngleSpeed(eyaw)
 
-        print("raw speed x y z yaw : {} {} {} {}".format(ux, uy, uz, uyaw))
+        #print("raw speed x y z yaw : {} {} {} {}".format(ux, uy, uz, uyaw))
 
         # Ceil commands and map them to drone orientation
         yaw  = self._state['yaw']
@@ -319,8 +311,8 @@ class Controller():
         cz   = self.within(uz, -1, 1)
         cyaw = self.within(uyaw, -1, 1)
 
-        print("ceils speed x y z yaw : {} {} {} {}".format(cx, cy, cz, cyaw))
-        print("____")
+        #print("ceils speed x y z yaw : {} {} {} {}".format(cx, cy, cz, cyaw))
+        #print("____")
 
         # Send commands to drone
         if abs(cyaw) > PRECISION:
