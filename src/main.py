@@ -8,13 +8,13 @@ def square():
     mission = Mission()
 
     mission.takeOff()
-    mission.backward(7)
+    mission.backward(5)
     mission.counterClockwise(90)
-    mission.forward(7)
+    mission.forward(5)
     mission.clockwise(90)
-    mission.forward(7)
+    mission.forward(5)
     mission.clockwise(90)
-    mission.forward(7)
+    mission.forward(5)
     mission.land()
 
     mission.execute()
@@ -25,8 +25,8 @@ def simpleTest():
     mission.takeOff()
     
     
-    mission.forward(5 * 50)
-    mission.backward(5 * 50)
+    mission.forward(5)
+    mission.backward(5)
     mission.land()
 
     mission.execute()
@@ -45,8 +45,8 @@ def simpleTest2():
 
 
 def main():
-    simpleTest()
-    #square()
+    #simpleTest()
+    square()
 
 	
 if __name__ == '__main__':

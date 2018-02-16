@@ -6,7 +6,7 @@ import time
 import math
 import numpy as np
 
-EPS_LIN      = 20
+EPS_LIN      = 40
 EPS_ALT      = 20
 EPS_ANG      = 20
 
@@ -327,7 +327,7 @@ class Controller():
             self._drone.forward(cx)
             return
 
-        if abs(cy) > PRECISION:
+        if abs(cy) > 0.3:
             self._drone.right(cy)
             return
 

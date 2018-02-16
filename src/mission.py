@@ -2,6 +2,8 @@ from controller import Controller
 import rospy
 import time
 
+distanceCorrection = 50
+
 class Mission():
     def __init__(self):
         self._commands = []
@@ -20,16 +22,16 @@ class Mission():
 
     def up(self, distance):
         controller = self._controller
-        self._commands.append(lambda : controller.up(distance))
+        self._commands.append(lambda : controller.up(distance * distanceCorrection))
 
 
     def forward(self, distance): # in meters!
         controller = self._controller
-        self._commands.append(lambda : controller.forward(distance))
+        self._commands.append(lambda : controller.forward(distance * distanceCorrection))
 
     def backward(self, distance):
         controller = self._controller
-        self._commands.append(lambda : controller.backward(distance))
+        self._commands.append(lambda : controller.backward(distance * distanceCorrection))
 
 
     def clockwise(self, angle):
