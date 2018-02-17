@@ -19,4 +19,4 @@ class SpeedCorrector():
         return sign * (0.15*x + 1.5)/30.0
 
     def getAngleSpeed(self, angle):
-        return angle/60.0
+        return angle/2.0

@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 class StateEstimate():
     def __init__(self):
@@ -13,7 +14,7 @@ class StateEstimate():
         # by definition of aircraft axes
         roll  = data.rotX
         pitch = data.rotY
-        yaw   = data.rotZ
+        yaw   = math.radians(data.rotZ) # was in degrees
         vx    = data.vx / 1000.0
         vy    = data.vy / 1000.0
         dt    = self._delta_t
@@ -28,7 +29,7 @@ class StateEstimate():
         o = {
             "dx": vx * dt,
             "dy": vy * dt,
-            "dyaw": yaw - self._last_yaw
+            "dyaw": self._last_yaw - yaw
         }
         self._last_yaw  = yaw
 
@@ -38,11 +39,9 @@ class StateEstimate():
         state['y']   = state['y'] + o["dx"] * np.math.sin(state['yaw']) + o["dy"] * np.math.cos(state['yaw'])
         state['yaw'] = state['yaw'] + o["dyaw"]
         state['z'] = data.altd / 1000.0 # altidude in mm, we want meters
-        #print('vx', vx)
-
 
         # Normalize the yaw value
-        state['yaw'] = np.math.atan2(np.math.sin(state['yaw']), np.math.cos(state['yaw']))
+        #state['yaw'] = np.math.atan2(np.math.sin(state['yaw']), np.math.cos(state['yaw']))
     
         self._state = state
 

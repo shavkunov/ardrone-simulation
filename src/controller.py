@@ -8,7 +8,7 @@ import numpy as np
 
 EPS_LIN      = 40
 EPS_ALT      = 20
-EPS_ANG      = 20
+EPS_ANG      = 0.05
 
 PRECISION = 0.1 # used to determine sending speed to every coordinate
 
@@ -335,7 +335,7 @@ class Controller():
             self._drone.up(cz)
             return
 
-        if abs(cyaw) > PRECISION:
+        if abs(cyaw) > 0.01:
             self._drone.clockwise(cyaw)
             return
 
