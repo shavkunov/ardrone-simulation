@@ -9,11 +9,13 @@ def square():
 
     mission.takeOff()
     mission.counterClockwise(90)
-    """mission.forward(5)
+    mission.forward(5)
     mission.clockwise(90)
     mission.forward(5)
     mission.clockwise(90)
-    mission.forward(5)"""
+    mission.forward(5)
+    mission.clockwise(90)
+    mission.forward(5)
     mission.land()
 
     mission.execute()
